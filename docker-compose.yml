@@ -21,10 +21,6 @@ services:
       - jenkins_data:/var/jenkins_home
       - ./casc-config.yaml:/var/jenkins_casc.yml
       - j-docker-certs:/certs/client
-    environment:
-      - DOCKER_HOST=tcp://docker:2376
-      - DOCKER_CERT_PATH=/certs/client
-      - DOCKER_TLS_VERIFY=1
 
   registry:
     image: registry:2.7.1
