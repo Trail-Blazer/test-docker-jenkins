@@ -1,0 +1,48 @@
+version: "3"
+
+networks:
+  cinet:
+
+volumes:
+  jenkins_data: {}
+  registry_data: {}
+  j-docker-certs: {}
+
+services:
+  jenkins:
+    build: ./jenkins-docker
+    env_file:
+      - jenkins.env
+    networks:
+      - cinet
+    ports:
+      - 127.0.0.1:8080:8080
+    volumes:
+      - jenkins_data:/var/jenkins_home
+      - ./casc-config.yaml:/var/jenkins_casc.yml
+      - j-docker-certs:/certs/client
+    environment:
+      - DOCKER_HOST=tcp://docker:2376
+      - DOCKER_CERT_PATH=/certs/client
+      - DOCKER_TLS_VERIFY=1
+
+  registry:
+    image: registry:2.7.1
+    container_name: registry
+    networks:
+      - cinet
+    ports:
+      - 127.0.0.1:5000:5000
+    volumes:
+      - registry_data:/var/lib/registry
+
+  docker:
+    networks:
+      - cinet
+    image: docker:dind
+    privileged: true
+    environment:
+      - DOCKER_TLS_CERTDIR=/certs
+    volumes:
+      - j-docker-certs:/certs/client
+    command: ["--insecure-registry=registry:5000"]

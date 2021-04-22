@@ -1,0 +1,40 @@
+jenkins:
+  numExecutors: 1
+  remotingSecurity:
+    enabled: false
+unclassified:
+  location:
+    url: "${JENKINS_HOST}"
+
+jobs:
+  - script: >
+      pipelineJob('simpledockerjob') {
+          definition {
+              cps {
+                  script('''
+                          pipeline {
+                            agent any
+                            environment {
+                                imagename = "test-hw:v$BUILD_NUMBER"
+                            }
+                            stages {
+                              stage('build docker image') {
+                                steps {
+                                  sh "docker build -t $imagename https://github.com/docker-library/hello-world.git#master:amd64/hello-world"
+                                }
+                              }
+                              stage('push to registry') {
+                                steps {
+                                  withDockerRegistry(url: 'registry:5000', credentialsId: '') {
+                                      sh "docker tag $imagename registry:5000/$imagename"
+                                      sh "docker push registry:5000/$imagename"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                      ''')
+                  sandbox()
+              }
+          }
+      }
